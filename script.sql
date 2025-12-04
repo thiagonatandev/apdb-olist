@@ -20,7 +20,7 @@ DROP TABLE IF EXISTS olist_products_dataset;
 
 DROP TABLE IF EXISTS olist_sellers_dataset;
 
-DROP TABLE IF EXISTS olist_order_customer_dataset;
+DROP TABLE IF EXISTS olist_customers_dataset;
 
 DROP TABLE IF EXISTS olist_geolocation_dataset;
 
@@ -37,7 +37,7 @@ CREATE TABLE olist_geolocation_dataset (
     )
 );
 
-CREATE TABLE olist_order_customer_dataset (
+CREATE TABLE olist_customers_dataset (
     customer_id VARCHAR(32) PRIMARY KEY,
     customer_unique_id VARCHAR(32) UNIQUE NOT NULL,
     customer_zip_code_prefix VARCHAR(5) NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE olist_order_reviews_dataset (
 SET FOREIGN_KEY_CHECKS = 1;
 
 ALTER TABLE olist_orders_dataset
-ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES olist_order_customer_dataset (customer_id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES olist_customers_dataset (customer_id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 ALTER TABLE olist_order_items_dataset
 ADD CONSTRAINT fk_items_order FOREIGN KEY (order_id) REFERENCES olist_orders_dataset (order_id) ON UPDATE RESTRICT ON DELETE RESTRICT;
@@ -136,7 +136,7 @@ ADD CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES olist_orders_d
 ALTER TABLE olist_order_payments_dataset
 ADD CONSTRAINT fk_payments_order FOREIGN KEY (order_id) REFERENCES olist_orders_dataset (order_id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE olist_order_customer_dataset
+ALTER TABLE olist_customers_dataset
 ADD CONSTRAINT fk_customer_geolocation FOREIGN KEY (customer_zip_code_prefix) REFERENCES olist_geolocation_dataset (geolocation_zip_code_prefix) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 ALTER TABLE olist_sellers_dataset
@@ -160,7 +160,7 @@ TABLE olist_geolocation_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' E
 );
 
 LOAD DATA LOCAL INFILE '/home/oagarian/bcdd/olist_customers_dataset.csv' INTO
-TABLE olist_order_customer_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (
+TABLE olist_customers_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (
     customer_id,
     customer_unique_id,
     customer_zip_code_prefix,
@@ -267,7 +267,7 @@ SELECT
     SUM(p.payment_value) AS total_gasto
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
     JOIN olist_order_payments_dataset AS p ON p.order_id = o.order_id
 WHERE
     o.order_purchase_timestamp BETWEEN '2017-01-01' AND '2017-12-31'
@@ -295,7 +295,7 @@ ORDER BY media_avaliacao DESC;
 SELECT o.order_id, o.order_status, o.order_purchase_timestamp, c.customer_unique_id, c.customer_city, c.customer_state, SUM(p.payment_value) AS total_pago
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
     LEFT JOIN olist_order_payments_dataset AS p ON p.order_id = o.order_id
 WHERE
     o.order_purchase_timestamp BETWEEN '2017-01-01' AND '2017-01-31'
@@ -330,7 +330,7 @@ SELECT o.order_id, c.customer_unique_id, c.customer_city, c.customer_state, o.or
     ) AS dias_atraso
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
 WHERE
     o.order_delivered_customer_date IS NOT NULL
     AND o.order_estimated_delivery_date IS NOT NULL
@@ -346,7 +346,7 @@ LIMIT 10;
 SELECT c.customer_unique_id, SUM(p.payment_value) AS total_gasto
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
     JOIN olist_order_payments_dataset AS p ON p.order_id = o.order_id
 GROUP BY
     c.customer_unique_id
@@ -365,7 +365,7 @@ SELECT
     COUNT(*) AS quantidade_pedidos
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
 WHERE
     o.order_delivered_customer_date IS NOT NULL
     AND o.order_delivered_carrier_date IS NOT NULL
@@ -386,7 +386,7 @@ CREATE INDEX idx_orders_delivered_customer_date ON olist_orders_dataset (
 
 CREATE INDEX idx_order_items_order_seller ON olist_order_items_dataset (order_id, seller_id);
 
-CREATE INDEX idx_customers_state ON olist_order_customer_dataset (customer_state);
+CREATE INDEX idx_customers_state ON olist_customers_dataset (customer_state);
 
 -- 6.1 Versão otimizada da query 5.1
 SELECT s.seller_id, s.seller_city, s.seller_state, SUM(oi.price + oi.freight_value) AS total_faturado
@@ -417,7 +417,7 @@ WITH
 SELECT c.customer_unique_id, r.total_pedidos, r.total_gasto
 FROM
     resumo_clientes AS r
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = r.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = r.customer_id
 ORDER BY r.total_gasto DESC, r.total_pedidos DESC
 LIMIT 10;
 
@@ -439,7 +439,7 @@ ORDER BY media_avaliacao DESC;
 SELECT o.order_id, o.order_status, o.order_purchase_timestamp, c.customer_unique_id, c.customer_city, c.customer_state, SUM(p.payment_value) AS total_pago
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
     LEFT JOIN olist_order_payments_dataset AS p ON p.order_id = o.order_id
 WHERE
     o.order_purchase_timestamp BETWEEN '2017-01-01' AND '2017-01-31'
@@ -472,7 +472,7 @@ SELECT o.order_id, c.customer_unique_id, c.customer_city, c.customer_state, o.or
     ) AS dias_atraso
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
 WHERE
     o.order_delivered_customer_date IS NOT NULL
     AND o.order_estimated_delivery_date IS NOT NULL
@@ -488,7 +488,7 @@ LIMIT 10;
 SELECT c.customer_unique_id, SUM(p.payment_value) AS total_gasto
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
     JOIN olist_order_payments_dataset AS p ON p.order_id = o.order_id
 GROUP BY
     c.customer_unique_id
@@ -507,7 +507,7 @@ SELECT
     COUNT(*) AS quantidade_pedidos
 FROM
     olist_orders_dataset AS o
-    JOIN olist_order_customer_dataset AS c ON c.customer_id = o.customer_id
+    JOIN olist_customers_dataset AS c ON c.customer_id = o.customer_id
 WHERE
     o.order_delivered_customer_date IS NOT NULL
     AND o.order_delivered_carrier_date IS NOT NULL
