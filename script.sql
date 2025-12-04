@@ -136,12 +136,6 @@ ADD CONSTRAINT fk_reviews_order FOREIGN KEY (order_id) REFERENCES olist_orders_d
 ALTER TABLE olist_order_payments_dataset
 ADD CONSTRAINT fk_payments_order FOREIGN KEY (order_id) REFERENCES olist_orders_dataset (order_id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
-ALTER TABLE olist_customers_dataset
-ADD CONSTRAINT fk_customer_geolocation FOREIGN KEY (customer_zip_code_prefix) REFERENCES olist_geolocation_dataset (geolocation_zip_code_prefix) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-ALTER TABLE olist_sellers_dataset
-ADD CONSTRAINT fk_seller_geolocation FOREIGN KEY (seller_zip_code_prefix) REFERENCES olist_geolocation_dataset (geolocation_zip_code_prefix) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
 ALTER TABLE olist_products_dataset
 ADD CONSTRAINT fk_product_category_translation FOREIGN KEY (product_category_name) REFERENCES product_category_name_translation (product_category_name) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
@@ -176,6 +170,12 @@ TABLE olist_sellers_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLO
     seller_state
 );
 
+LOAD DATA LOCAL INFILE '/home/oagarian/bcdd/product_category_name_translation.csv' INTO
+TABLE product_category_name_translation CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (
+    product_category_name,
+    product_category_name_english
+);
+
 LOAD DATA LOCAL INFILE '/home/oagarian/bcdd/olist_products_dataset.csv' INTO
 TABLE olist_products_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (
     product_id,
@@ -187,12 +187,6 @@ TABLE olist_products_dataset CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCL
     product_length_cm,
     product_height_cm,
     product_width_cm
-);
-
-LOAD DATA LOCAL INFILE '/home/oagarian/bcdd/product_category_name_translation.csv' INTO
-TABLE product_category_name_translation CHARACTER SET utf8mb4 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS (
-    product_category_name,
-    product_category_name_english
 );
 
 LOAD DATA LOCAL INFILE '/home/oagarian/bcdd/olist_orders_dataset.csv' INTO
